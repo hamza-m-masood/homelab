@@ -1,0 +1,42 @@
+name: lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # gitleaks scans the whole history
+
+      - uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: 1.13.2
+          tofu_wrapper: false
+
+      - name: tofu fmt
+        run: tofu fmt -check -recursive network
+
+      - name: tofu validate
+        working-directory: network/routeros
+        env:
+          # validate never reads state; encryption just needs a value.
+          TF_VAR_state_passphrase: ci-validate-only-not-a-secret
+        run: |
+          tofu init -backend=false -input=false
+          tofu validate
+
+      - name: shellcheck
+        run: shellcheck scripts/*.sh
+
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

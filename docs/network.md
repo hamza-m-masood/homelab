@@ -36,7 +36,7 @@ patches (`talos/`) implement what is written here; change this file first.
 | 20 | storage | 10.10.20.0/24 | none | node ports, tagged | Ceph cluster network or Longhorn replication. The hAP has no IP here, so nothing can route in or out. |
 | 30 | clients | 10.10.30.0/24 | 10.10.30.1 | lab Wi-Fi | Laptop, phone |
 | | wireguard | 10.10.40.0/24 | 10.10.40.1 | hAP `wg0` | Access from the home LAN and from outside |
-| | rescue | 10.10.99.0/24 | 10.10.99.1 | hAP ether5, outside the bridge | Break-glass admin port; survives a broken VLAN config |
+| | rescue | 10.10.99.0/24 | none handed out | hAP ether5, outside the bridge | Break-glass admin port. Set up by `bootstrap.rsc`, never by OpenTofu, so it survives a broken VLAN config or a bad apply |
 | | lb-pool | 10.10.100.0/24 | | no interface | Cilium LB-IPAM; routes learned by the hAP over BGP |
 | | pods | 10.244.0.0/16 | | | Per-node /24s, Cilium native routing |
 | | services | 10.96.0.0/12 | | | ClusterIPs |
@@ -77,7 +77,7 @@ KubePrism on `localhost:7445`.
 | ether2 | bridge, PVID 10, tagged 20 | node1 |
 | ether3 | bridge, PVID 10, tagged 20 | node2 |
 | ether4 | bridge, PVID 10, tagged 20 | node3 |
-| ether5 | routed, not in bridge | rescue, 10.10.99.1/24 with DHCP |
+| ether5 | routed, not in bridge | rescue, 10.10.99.1/24 with DHCP (no gateway); configured by `bootstrap.rsc` |
 | wifi (2.4 + 5 GHz) | bridge, PVID 30 | SSID `lab` |
 
 VLAN 10 is untagged on node ports so a wiped node in Talos maintenance mode
@@ -116,6 +116,11 @@ Starting Cilium settings (final values live in
 | Router ID / peers | 10.10.10.1 | 10.10.10.11-13 |
 | Advertised | nothing | LB-IPAM addresses as /32s |
 
+The hAP accepts only /32s inside the LB pool from the nodes (`bgp-in-cilium`)
+and sends nothing back (`bgp-out-cilium`). The sessions themselves are
+switched off until the RouterOS provider supports RouterOS 7.25's BGP
+settings; see `network/routeros/README.md`.
+
 To verify while building:
 
 - whether RouterOS installs all three next hops for a /32 (ECMP), with
@@ -126,10 +131,11 @@ To verify while building:
 
 | From | To | Allowed |
 |---|---|---|
-| clients, wireguard | mgmt | TCP 6443 (kube API), TCP 50000 (Talos API) |
-| clients, wireguard | lb-pool | everything |
-| clients, wireguard, rescue | hAP | DNS, DHCP, Winbox, REST API (OpenTofu) |
-| mgmt | hAP | DNS, DHCP, NTP, TCP 179 (BGP) |
+| admin (clients, wireguard, rescue) | mgmt | TCP 6443 (kube API), TCP 50000 (Talos API), ICMP |
+| admin | lb-pool | everything |
+| admin | hAP | everything (REST API, Winbox and SSH are also limited to these networks) |
+| admin | internet | everything |
+| mgmt | hAP | DNS, DHCP, TCP 179 (BGP) from the node IPs |
 | mgmt | internet | everything (images, Cloudflare API, NTP) |
 | home LAN / internet | hAP WAN | UDP WireGuard only |
 | anything else | anything | dropped |
@@ -145,9 +151,12 @@ which only works if the hub has a public IPv4 address (no CGNAT).
 - App names point at the Gateway: `argocd.hamzatest.com`,
   `hubble.hamzatest.com`, `grafana.hamzatest.com`, ... -> `10.10.100.10`,
   published by external-dns.
-- `k8s.hamzatest.com` -> `10.10.10.10`, added to the API server cert SANs.
-  The Talos endpoint stays the plain IP so the cluster doesn't depend on DNS.
-- Private IPs in public DNS: no split-horizon setup to maintain. Lab clients
-  resolve through the hAP.
+- Infrastructure names are static records on the hAP: `router`, `k8s`
+  (-> `10.10.10.10`) and `node1`-`node3`, all under `hamzatest.com`. Lab
+  clients resolve through the hAP, which forwards everything else to
+  Cloudflare (1.1.1.1).
+- `k8s.hamzatest.com` goes into the API server cert SANs. The Talos endpoint
+  stays the plain IP so the cluster doesn't depend on DNS.
+- App names are private IPs in public DNS: no split-horizon setup to maintain.
 - Certificates: cert-manager, Let's Encrypt, DNS-01 via a Cloudflare API token
   scoped to this zone; one wildcard `*.hamzatest.com` on the Gateway.

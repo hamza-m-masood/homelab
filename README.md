@@ -11,7 +11,7 @@ Results get written up at [hamzamasood.dev](https://hamzamasood.dev).
 
 | Layer | Choice |
 |---|---|
-| Hardware | 3x Lenovo mini PC, MikroTik hAP ax2 ([hardware](docs/hardware.md)) |
+| Hardware | 3x Lenovo ThinkCentre M910q Tiny, MikroTik hAP ax2 ([hardware](docs/hardware.md)) |
 | Router | RouterOS 7, configured with OpenTofu |
 | OS | Talos Linux, 3 control-plane nodes running workloads |
 | Network | VLANs on one NIC, Cilium (kube-proxy replacement, BGP, Gateway API, Hubble) ([network](docs/network.md)) |
@@ -22,8 +22,8 @@ Results get written up at [hamzamasood.dev](https://hamzamasood.dev).
 
 ## Roadmap
 
-- [ ] **0. Hardware inventory and BIOS**: [docs/hardware.md](docs/hardware.md)
-- [ ] **1. Router**: hAP ax2 as code (VLANs, DHCP, DNS, firewall, BGP, WireGuard, Wi-Fi)
+- [ ] **0. Hardware inventory and BIOS**: [docs/hardware.md](docs/hardware.md). Inventory done; RAM and data SSD upgrades pending
+- [ ] **1. Router**: hAP ax2 as code (VLANs, DHCP, DNS, firewall, BGP, WireGuard, Wi-Fi). [Config](network/routeros/) written and tested against RouterOS CHR; next: [first boot](docs/runbooks/router-first-boot.md) on the real hAP
 - [ ] **2. Talos**: three-node HA control plane, VIP, Image Factory schematic
 - [ ] **3. Cilium**: kube-proxy replacement, native routing, BGP to the hAP, Gateway API, Hubble
 - [ ] **4. GitOps**: Argo CD manages everything; `task rebuild` under 20 minutes
@@ -36,8 +36,10 @@ Results get written up at [hamzamasood.dev](https://hamzamasood.dev).
 Directories appear as each phase lands.
 
 ```
+Taskfile.yaml         entry points: `task --list`
+.mise.toml            pinned CLI versions: `mise install`
 docs/                 hardware, network plan, decision records, runbooks
-scripts/              one-off helpers (hardware inventory)
+scripts/              helpers (hardware inventory, template filling)
 network/routeros/     OpenTofu for the hAP ax2
 talos/                Image Factory schematic, encrypted secrets, machine config patches
 kubernetes/
