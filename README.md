@@ -1,0 +1,58 @@
+# homelab
+
+A three-node bare-metal Kubernetes lab, defined entirely in this repo and
+rebuildable from scratch in about 20 minutes. It exists to practise the
+layers below the ones I work with every day: bare metal, L2/L3 networking,
+eBPF, self-run distributed storage, and GitOps.
+
+Results get written up at [hamzamasood.dev](https://hamzamasood.dev).
+
+## Stack
+
+| Layer | Choice |
+|---|---|
+| Hardware | 3x Lenovo mini PC, MikroTik hAP ax2 ([hardware](docs/hardware.md)) |
+| Router | RouterOS 7, configured with OpenTofu |
+| OS | Talos Linux, 3 control-plane nodes running workloads |
+| Network | VLANs on one NIC, Cilium (kube-proxy replacement, BGP, Gateway API, Hubble) ([network](docs/network.md)) |
+| GitOps | Argo CD |
+| Storage | Rook-Ceph or Longhorn (decided after the hardware inventory) |
+| Secrets | SOPS + age |
+| DNS / TLS | `hamzatest.com` on Cloudflare, cert-manager, external-dns |
+
+## Roadmap
+
+- [ ] **0. Hardware inventory and BIOS**: [docs/hardware.md](docs/hardware.md)
+- [ ] **1. Router**: hAP ax2 as code (VLANs, DHCP, DNS, firewall, BGP, WireGuard, Wi-Fi)
+- [ ] **2. Talos**: three-node HA control plane, VIP, Image Factory schematic
+- [ ] **3. Cilium**: kube-proxy replacement, native routing, BGP to the hAP, Gateway API, Hubble
+- [ ] **4. GitOps**: Argo CD manages everything; `task rebuild` under 20 minutes
+- [ ] **5. Storage**: distributed storage, Zeebe and Elasticsearch as the stateful test subjects, node-loss tests
+- [ ] **6. Encryption**: Cilium WireGuard vs Istio ambient mTLS, throughput, latency and failure behaviour
+- [ ] **7. A Go controller** for something the lab needs
+
+## Layout
+
+Directories appear as each phase lands.
+
+```
+docs/                 hardware, network plan, decision records, runbooks
+scripts/              one-off helpers (hardware inventory)
+network/routeros/     OpenTofu for the hAP ax2
+talos/                Image Factory schematic, encrypted secrets, machine config patches
+kubernetes/
+  bootstrap/          applied once: Argo CD + root Application
+  argocd/             ApplicationSets; Argo CD manages itself from here
+  infrastructure/     one directory per component (cilium, cert-manager, storage, ...)
+  workloads/          stateful test subjects
+experiments/          hypothesis, method, harness and raw results per experiment
+controllers/          Go controller(s)
+```
+
+## Decisions
+
+- [0001 Talos Linux](docs/adr/0001-talos-linux.md)
+- [0002 Network design](docs/adr/0002-network-design.md)
+- [0003 Argo CD](docs/adr/0003-argo-cd.md)
+- [0004 RouterOS as code with OpenTofu](docs/adr/0004-routeros-as-code.md)
+- [0005 Secrets with SOPS and age](docs/adr/0005-secrets-sops-age.md)

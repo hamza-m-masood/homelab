@@ -1,0 +1,19 @@
+# Rendered Talos configs and credentials (regenerated from talos/)
+talos/out/
+talosconfig
+kubeconfig
+
+# OpenTofu working files. State itself is encrypted and committed (ADR 0004).
+.terraform/
+*.tfplan
+crash.log
+
+# Decrypted SOPS output
+*.dec.yaml
+*.dec.json
+.env
+
+# Experiment scratch (raw results that belong in git go under results/)
+experiments/*/tmp/
+
+.DS_Store
