@@ -34,5 +34,9 @@ should be reviewable before they hit the router.
 
 - The router has to be reachable over HTTPS from wherever `tofu apply` runs
   (rescue port, lab Wi-Fi or WireGuard).
-- Provider coverage lags RouterOS features at times; gaps get a small
-  `.rsc` fallback, written down rather than applied silently.
+- Provider coverage lags RouterOS at times. First case: BGP sessions, where
+  provider 1.99.1 sends a parameter RouterOS 7.25 no longer accepts. Gaps
+  are switched off behind a flag and written down, not worked around by hand.
+- The config was first applied to RouterOS CHR (MikroTik's x86 build) in a
+  VM, which caught a rule-ordering bug that would have cut OpenTofu off from
+  the router mid-apply. Worth repeating before risky changes.

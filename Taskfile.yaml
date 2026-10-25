@@ -1,0 +1,68 @@
+version: "3"
+
+vars:
+  ROUTER: network/routeros
+  ROUTER_SECRETS: network/routeros/secrets.sops.yaml
+
+env:
+  SOPS_AGE_KEY_FILE:
+    sh: echo "${SOPS_AGE_KEY_FILE:-$HOME/.config/sops/age/keys.txt}"
+
+tasks:
+  age:init:
+    desc: Create this machine's age key (once) and put its public key in .sops.yaml
+    status:
+      - test -f "$SOPS_AGE_KEY_FILE"
+    cmds:
+      - mkdir -p "$(dirname "$SOPS_AGE_KEY_FILE")"
+      - age-keygen -o "$SOPS_AGE_KEY_FILE"
+      - perl -pi -e "s/age1PLACEHOLDER/$(age-keygen -y "$SOPS_AGE_KEY_FILE")/" .sops.yaml
+      - echo "Back up $SOPS_AGE_KEY_FILE (password manager). It decrypts every secret in this repo."
+
+  router:secrets:
+    desc: Generate the router's secrets into an encrypted secrets.sops.yaml (once)
+    status:
+      - test -f {{.ROUTER_SECRETS}}
+    cmds:
+      # Hex only: the passwords end up inside a RouterOS script.
+      - >-
+        printf 'ROUTEROS_ADMIN_PASSWORD: "%s"\nTF_VAR_routeros_password: "%s"\nTF_VAR_state_passphrase: "%s"\nTF_VAR_wifi_passphrase: "%s"\n'
+        "$(openssl rand -hex 16)" "$(openssl rand -hex 16)" "$(openssl rand -hex 24)" "$(openssl rand -hex 8)"
+        > {{.ROUTER_SECRETS}}
+      - sops encrypt -i {{.ROUTER_SECRETS}}
+
+  router:bootstrap:
+    desc: Render out/bootstrap.rsc with the passwords filled in (upload it, then delete it)
+    cmds:
+      - mkdir -p {{.ROUTER}}/out
+      - >-
+        sops exec-env {{.ROUTER_SECRETS}}
+        'scripts/fill-template.sh {{.ROUTER}}/bootstrap.rsc ROUTEROS_ADMIN_PASSWORD TF_VAR_routeros_password
+        > {{.ROUTER}}/out/bootstrap.rsc'
+      - echo "Wrote {{.ROUTER}}/out/bootstrap.rsc"
+
+  router:init:
+    desc: Download the RouterOS provider
+    cmds:
+      - sops exec-env {{.ROUTER_SECRETS}} 'tofu -chdir={{.ROUTER}} init'
+
+  router:plan:
+    desc: Show what would change on the router
+    cmds:
+      - sops exec-env {{.ROUTER_SECRETS}} 'tofu -chdir={{.ROUTER}} plan -out=router.tfplan'
+
+  router:apply:
+    desc: Apply the last plan
+    cmds:
+      - sops exec-env {{.ROUTER_SECRETS}} 'tofu -chdir={{.ROUTER}} apply router.tfplan'
+
+  router:output:
+    desc: Print outputs (e.g. the WireGuard public key)
+    cmds:
+      - sops exec-env {{.ROUTER_SECRETS}} 'tofu -chdir={{.ROUTER}} output'
+
+  lint:
+    desc: Formatting and static checks (same as CI, minus validate)
+    cmds:
+      - tofu fmt -check -recursive network
+      - shellcheck scripts/*.sh

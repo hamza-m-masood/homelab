@@ -1,0 +1,5 @@
+# Who can decrypt *.sops.yaml files (ADR 0005). `task age:init` replaces the
+# placeholder with this machine's age public key.
+creation_rules:
+  - path_regex: \.sops\.ya?ml$
+    age: age1PLACEHOLDER

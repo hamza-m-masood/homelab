@@ -1,3 +1,6 @@
+# Rendered bootstrap script: contains passwords (task router:bootstrap)
+network/routeros/out/
+
 # Rendered Talos configs and credentials (regenerated from talos/)
 talos/out/
 talosconfig
