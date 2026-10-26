@@ -16,13 +16,13 @@ Results get written up at [hamzamasood.dev](https://hamzamasood.dev).
 | OS | Talos Linux, 3 control-plane nodes running workloads |
 | Network | VLANs on one NIC, Cilium (kube-proxy replacement, BGP, Gateway API, Hubble) ([network](docs/network.md)) |
 | GitOps | Argo CD |
-| Storage | Rook-Ceph or Longhorn (decided after the hardware inventory) |
+| Storage | Longhorn or Rook-Ceph, decided at the storage phase (Rook-Ceph needs a RAM upgrade) |
 | Secrets | SOPS + age |
 | DNS / TLS | `hamzatest.com` on Cloudflare, cert-manager, external-dns |
 
 ## Roadmap
 
-- [ ] **0. Hardware inventory and BIOS**: [docs/hardware.md](docs/hardware.md). Inventory done; RAM and data SSD upgrades pending
+- [ ] **0. Hardware inventory and BIOS**: [docs/hardware.md](docs/hardware.md). Inventory done; RAM and data SSD upgrades deferred on cost
 - [ ] **1. Router**: hAP ax2 as code (VLANs, DHCP, DNS, firewall, BGP, WireGuard, Wi-Fi). [Config](network/routeros/) written and tested against RouterOS CHR; next: [first boot](docs/runbooks/router-first-boot.md) on the real hAP
 - [ ] **2. Talos**: three-node HA control plane, VIP, Image Factory schematic
 - [ ] **3. Cilium**: kube-proxy replacement, native routing, BGP to the hAP, Gateway API, Hubble
