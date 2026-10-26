@@ -1,0 +1,5 @@
+# Applied after common.yaml, which deletes the default node labels.
+apiVersion: v1alpha1
+kind: KubeNodeConfig
+labels:
+  node-role.kubernetes.io/control-plane: ""

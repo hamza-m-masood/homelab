@@ -3,10 +3,16 @@ version: "3"
 vars:
   ROUTER: network/routeros
   ROUTER_SECRETS: network/routeros/secrets.sops.yaml
+  TALOS_SECRETS: talos/secrets.sops.yaml
+
+dotenv:
+  - talos/talos.env
 
 env:
   SOPS_AGE_KEY_FILE:
     sh: echo "${SOPS_AGE_KEY_FILE:-$HOME/.config/sops/age/keys.txt}"
+  TALOSCONFIG: "{{.ROOT_DIR}}/talos/out/talosconfig"
+  KUBECONFIG: "{{.ROOT_DIR}}/talos/out/kubeconfig"
 
 tasks:
   age:init:
@@ -63,8 +69,77 @@ tasks:
     cmds:
       - sops exec-env {{.ROUTER_SECRETS}} 'tofu -chdir={{.ROUTER}} output'
 
+  talos:schematic:
+    desc: Register talos/schematic.yaml with Image Factory and print its ID (goes in talos/talos.env)
+    cmds:
+      - curl -fsS -X POST --data-binary @talos/schematic.yaml https://factory.talos.dev/schematics
+      - echo
+
+  talos:iso:
+    desc: Print the boot ISO URL for the pinned schematic and version
+    cmds:
+      - echo "https://factory.talos.dev/image/$TALOS_SCHEMATIC/$TALOS_VERSION/metal-amd64.iso"
+
+  talos:secrets:
+    desc: Generate the cluster's secrets bundle into an encrypted secrets.sops.yaml (once)
+    status:
+      - test -f {{.TALOS_SECRETS}}
+    cmds:
+      - talosctl gen secrets --output-file {{.TALOS_SECRETS}}
+      - sops encrypt -i {{.TALOS_SECRETS}}
+
+  talos:gen:
+    desc: Render talos/out/node1-3.yaml and talosconfig (gitignored)
+    cmds:
+      - sops exec-file --no-fifo {{.TALOS_SECRETS}} 'scripts/talos-gen.sh {} talos/out'
+
+  talos:validate:
+    desc: Render and validate the configs with throwaway secrets (what CI runs)
+    cmds:
+      - rm -rf talos/out/validate && mkdir -p talos/out/validate
+      - talosctl gen secrets --output-file talos/out/validate/secrets.yaml
+      - scripts/talos-gen.sh talos/out/validate/secrets.yaml talos/out/validate
+      - rm -rf talos/out/validate
+
+  talos:install:
+    desc: "First install from maintenance mode: task talos:install NODE=node1 IP=<its DHCP address>"
+    requires:
+      vars: [NODE, IP]
+    cmds:
+      - talosctl apply-config --insecure --nodes {{.IP}} --file talos/out/{{.NODE}}.yaml
+
+  talos:apply:
+    desc: "Apply config changes to a running node: task talos:apply NODE=node1"
+    requires:
+      vars: [NODE]
+    cmds:
+      - talosctl apply-config --nodes 10.10.10.1{{trimPrefix "node" .NODE}} --file talos/out/{{.NODE}}.yaml
+
+  talos:bootstrap:
+    desc: Start etcd on node1 (once per cluster, after the nodes are installed)
+    cmds:
+      - talosctl bootstrap --nodes 10.10.10.11
+
+  talos:kubeconfig:
+    desc: Write talos/out/kubeconfig
+    cmds:
+      - talosctl kubeconfig talos/out/kubeconfig --nodes 10.10.10.11 --force --merge=false
+
+  talos:upgrade:
+    desc: "Upgrade one node to TALOS_VERSION and the pinned schematic: task talos:upgrade NODE=node1"
+    requires:
+      vars: [NODE]
+    cmds:
+      - talosctl upgrade --nodes 10.10.10.1{{trimPrefix "node" .NODE}} --image "factory.talos.dev/metal-installer/$TALOS_SCHEMATIC:$TALOS_VERSION"
+
+  talos:upgrade-k8s:
+    desc: Upgrade Kubernetes on all nodes to KUBERNETES_VERSION
+    cmds:
+      - talosctl upgrade-k8s --nodes 10.10.10.11 --to "$KUBERNETES_VERSION"
+
   lint:
-    desc: Formatting and static checks (same as CI, minus validate)
+    desc: Formatting and static checks (CI also runs tofu validate)
     cmds:
       - tofu fmt -check -recursive network
       - shellcheck scripts/*.sh
+      - task: talos:validate

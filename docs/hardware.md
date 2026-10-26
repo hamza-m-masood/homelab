@@ -33,7 +33,8 @@ the bottom cover).
 | node3 | ether4 | from the router's DHCP leases on first boot |
 
 Label the boxes to match. Each box also has its MAC on a sticker next to the
-network port.
+network port. The MACs are for Wake-on-LAN; the Talos config doesn't use
+them (it finds the NIC by driver).
 
 ## Upgrades (deferred)
 

@@ -24,7 +24,7 @@ Results get written up at [hamzamasood.dev](https://hamzamasood.dev).
 
 - [ ] **0. Hardware inventory and BIOS**: [docs/hardware.md](docs/hardware.md). Inventory done; RAM and data SSD upgrades deferred on cost
 - [x] **1. Router**: hAP ax2 as code (VLANs, DHCP, DNS, firewall, BGP, WireGuard, Wi-Fi). [Config](network/routeros/) applied to the real hAP: plan clean, Wi-Fi verified. BGP sessions follow in phase 3
-- [ ] **2. Talos**: three-node HA control plane, VIP, Image Factory schematic
+- [ ] **2. Talos**: three-node HA control plane, VIP, Image Factory schematic. [Configs](talos/) written and validated in CI; install with the [first-boot runbook](docs/runbooks/talos-first-boot.md)
 - [ ] **3. Cilium**: kube-proxy replacement, native routing, BGP to the hAP, Gateway API, Hubble
 - [ ] **4. GitOps**: Argo CD manages everything; `task rebuild` under 20 minutes
 - [ ] **5. Storage**: distributed storage, Zeebe and Elasticsearch as the stateful test subjects, node-loss tests
@@ -39,7 +39,7 @@ Directories appear as each phase lands.
 Taskfile.yaml         entry points: `task --list`
 .mise.toml            pinned CLI versions: `mise install`
 docs/                 hardware, network plan, decision records, runbooks
-scripts/              helpers (hardware inventory, template filling)
+scripts/              helpers (hardware inventory, template filling, Talos config rendering)
 network/routeros/     OpenTofu for the hAP ax2
 talos/                Image Factory schematic, encrypted secrets, machine config patches
 kubernetes/

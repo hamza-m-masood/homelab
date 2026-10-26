@@ -10,15 +10,21 @@ itself is well-trodden ground; the point is the layers underneath it.
 
 ## Decision
 
-- Talos Linux on all three nodes. All three are control-plane nodes with
-  `cluster.allowSchedulingOnControlPlanes: true`.
+- Talos Linux (1.14) on all three nodes. All three are control-plane nodes
+  and run workloads: the control-plane taint is removed, and so are the
+  default node labels, one of which would stop Cilium announcing
+  LoadBalancer IPs from these nodes.
 - The Kubernetes API endpoint is the Talos VIP `10.10.10.10` (see
   [network](../network.md)). `talosctl` endpoints are the node IPs, because
   the VIP only exists once etcd is healthy. In-cluster clients use KubePrism.
-- Config is `talosctl gen config` plus patches in `talos/patches/`. The
-  secrets bundle from `talosctl gen secrets` is committed SOPS-encrypted
+- Config is `talosctl gen config` plus patches in `talos/patches/`, rendered
+  by `task talos:gen` and validated in CI ([talos/](../../talos/README.md)).
+  The secrets bundle from `talosctl gen secrets` is committed SOPS-encrypted
   ([0005](0005-secrets-sops-age.md)); rendered machine configs are never
   committed.
+- No MAC addresses in config: each node has one NIC, selected by driver.
+- Talos's `EPHEMERAL` volume is capped at 100 GiB so the rest of the boot disk
+  stays available to the storage phase.
 - The image comes from Talos Image Factory, with the schematic (extensions)
   committed and its ID pinned.
 
@@ -36,5 +42,7 @@ itself is well-trodden ground; the point is the layers underneath it.
   `dashboard` and the resource API.
 - Anything the host needs (microcode, iSCSI tools for Longhorn) has to be a
   system extension baked into the image.
+- Nodes are `NotReady` between install and Cilium (phase 3): Flannel and
+  kube-proxy are disabled from the start, so there's nothing to rip out.
 - etcd quorum is 2 of 3: losing one node is survivable, losing two is not.
   Node-loss experiments are deliberately one node at a time.
