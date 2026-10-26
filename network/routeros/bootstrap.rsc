@@ -14,12 +14,15 @@
 /system identity set name=router
 
 # Rescue port: outside the bridge and never managed by OpenTofu, so a bad
-# apply can't take away the way back in. No gateway or DNS is handed out, so
-# a laptop on this port keeps using its other connection for the internet.
+# apply can't take away the way back in. Also the admin laptop's wired port.
+# No default gateway is handed out, only a route to the lab (10.10.0.0/16 via
+# 10.10.99.1, DHCP option 121), so the laptop keeps using its other connection
+# for the internet. DNS is the router, which knows the lab's names.
 /ip address add address=10.10.99.1/24 interface=ether5 comment="rescue (bootstrap)"
 /ip pool add name=rescue ranges=10.10.99.2-10.10.99.9 comment="rescue (bootstrap)"
+/ip dhcp-server option add name=lab-route code=121 value=0x100A0A0A0A6301 comment="10.10.0.0/16 via 10.10.99.1 (bootstrap)"
 /ip dhcp-server add name=rescue interface=ether5 address-pool=rescue comment="rescue (bootstrap)"
-/ip dhcp-server network add address=10.10.99.0/24 comment="rescue (bootstrap)"
+/ip dhcp-server network add address=10.10.99.0/24 dns-server=10.10.99.1 dhcp-option=lab-route comment="rescue (bootstrap)"
 
 /user set [find name=admin] password="${ROUTEROS_ADMIN_PASSWORD}"
 /user add name=tofu group=full password="${TF_VAR_routeros_password}" comment="OpenTofu (bootstrap)"
