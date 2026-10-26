@@ -40,8 +40,8 @@ itself is well-trodden ground; the point is the layers underneath it.
 
 - No SSH. Debugging goes through `talosctl dmesg`, `logs`, `pcap`,
   `dashboard` and the resource API.
-- Anything the host needs (microcode, iSCSI tools for Longhorn) has to be a
-  system extension baked into the image.
+- Anything the host needs (microcode now, NVIDIA drivers on a future GPU
+  node) has to be a system extension baked into the image.
 - Nodes are `NotReady` between install and Cilium (phase 3): Flannel and
   kube-proxy are disabled from the start, so there's nothing to rip out.
 - etcd quorum is 2 of 3: losing one node is survivable, losing two is not.

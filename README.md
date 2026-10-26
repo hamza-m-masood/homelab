@@ -2,8 +2,10 @@
 
 A three-node bare-metal Kubernetes lab, defined entirely in this repo and
 rebuildable from scratch in about 20 minutes. It exists to practise the
-layers below the ones I work with every day: bare metal, L2/L3 networking,
-eBPF, self-run distributed storage, and GitOps.
+layers below the ones I work with every day (bare metal, L2/L3 networking,
+eBPF, self-run distributed storage, GitOps) and the jobs AI platforms add on
+top: scheduling scarce accelerators, serving models, and moving model
+weights around ([why](docs/adr/0006-ai-infrastructure.md)).
 
 Results get written up at [hamzamasood.dev](https://hamzamasood.dev).
 
@@ -16,20 +18,25 @@ Results get written up at [hamzamasood.dev](https://hamzamasood.dev).
 | OS | Talos Linux, 3 control-plane nodes running workloads |
 | Network | VLANs on one NIC, Cilium (kube-proxy replacement, BGP, Gateway API, Hubble) ([network](docs/network.md)) |
 | GitOps | Argo CD |
-| Storage | Longhorn or Rook-Ceph, decided at the storage phase (Rook-Ceph needs a RAM upgrade) |
+| Storage | Rook-Ceph: block volumes, and S3 for model weights and checkpoints |
+| Scheduling | Dynamic Resource Allocation (simulated GPUs for now), Kueue, JobSet |
+| Inference | Gateway API Inference Extension, simulated vLLM servers, llama.cpp |
 | Secrets | SOPS + age |
 | DNS / TLS | `hamzatest.com` on Cloudflare, cert-manager, external-dns |
 
 ## Roadmap
 
-- [ ] **0. Hardware inventory and BIOS**: [docs/hardware.md](docs/hardware.md). Inventory done; RAM and data SSD upgrades deferred on cost
+- [ ] **0. Hardware inventory and BIOS**: [docs/hardware.md](docs/hardware.md). Inventory done; RAM going to 20 GB per node, data SSD deferred
 - [x] **1. Router**: hAP ax2 as code (VLANs, DHCP, DNS, firewall, BGP, WireGuard, Wi-Fi). [Config](network/routeros/) applied to the real hAP: plan clean, Wi-Fi verified. BGP sessions follow in phase 3
 - [ ] **2. Talos**: three-node HA control plane, VIP, Image Factory schematic. [Configs](talos/) written and validated in CI; install with the [first-boot runbook](docs/runbooks/talos-first-boot.md)
-- [ ] **3. Cilium**: kube-proxy replacement, native routing, BGP to the hAP, Gateway API, Hubble
+- [ ] **3. Cilium**: kube-proxy replacement, native routing, BGP to the hAP, Gateway API, Hubble. WireGuard on, overhead measured once
 - [ ] **4. GitOps**: Argo CD manages everything; `task rebuild` under 20 minutes
-- [ ] **5. Storage**: distributed storage, Zeebe and Elasticsearch as the stateful test subjects, node-loss tests
-- [ ] **6. Encryption**: Cilium WireGuard vs Istio ambient mTLS, throughput, latency and failure behaviour
-- [ ] **7. A Go controller** for something the lab needs
+- [ ] **5. Storage**: Rook-Ceph. How fast model weights load from it, what node loss does to checkpoints and to a Zeebe cluster
+- [ ] **6. Scheduling**: Dynamic Resource Allocation with simulated GPUs; Kueue and JobSet for queues, quotas and all-or-nothing scheduling
+- [ ] **7. Inference**: Gateway API Inference Extension over simulated vLLM servers, llama.cpp for real tokens, autoscaling on queue depth. Cache-aware routing vs round robin, measured
+- [ ] **8. A Go controller** that caches model weights on nodes before pods scale up; cold starts measured
+- [ ] **9. Failure drills**: inject failures, compare an AI agent's diagnosis with mine
+- [ ] **Later: a GPU node** for real GPU scheduling and serving ([hardware](docs/hardware.md#upgrades))
 
 ## Layout
 
@@ -46,7 +53,7 @@ kubernetes/
   bootstrap/          applied once: Argo CD + root Application
   argocd/             ApplicationSets; Argo CD manages itself from here
   infrastructure/     one directory per component (cilium, cert-manager, storage, ...)
-  workloads/          stateful test subjects
+  workloads/          model servers and test workloads
 experiments/          hypothesis, method, harness and raw results per experiment
 controllers/          Go controller(s)
 ```
@@ -58,3 +65,5 @@ controllers/          Go controller(s)
 - [0003 Argo CD](docs/adr/0003-argo-cd.md)
 - [0004 RouterOS as code with OpenTofu](docs/adr/0004-routeros-as-code.md)
 - [0005 Secrets with SOPS and age](docs/adr/0005-secrets-sops-age.md)
+- [0006 Aim the lab at AI infrastructure](docs/adr/0006-ai-infrastructure.md)
+- [0007 Rook-Ceph for storage](docs/adr/0007-rook-ceph.md)

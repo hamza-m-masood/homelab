@@ -33,7 +33,7 @@ patches (`talos/`) implement what is written here; change this file first.
 | VLAN | Name | Subnet | Gateway | Lives on | Carries |
 |---|---|---|---|---|---|
 | 10 | mgmt | 10.10.10.0/24 | 10.10.10.1 | node ports, untagged | Talos API, kube API, etcd, kubelet, node InternalIPs (so pod traffic), BGP sessions |
-| 20 | storage | 10.10.20.0/24 | none | node ports, tagged | Ceph cluster network or Longhorn replication. The hAP has no IP here, so nothing can route in or out. |
+| 20 | storage | 10.10.20.0/24 | none | node ports, tagged | Ceph replication (cluster network). The hAP has no IP here, so nothing can route in or out. |
 | 30 | clients | 10.10.30.0/24 | 10.10.30.1 | lab Wi-Fi | Laptop, phone |
 | | wireguard | 10.10.40.0/24 | 10.10.40.1 | hAP `wg0` | Access from the home LAN and from outside |
 | | rescue | 10.10.99.0/24 | none; DHCP gives a route to 10.10.0.0/16 instead | hAP ether5, outside the bridge | The admin laptop's wired port, and the break-glass port. Set up by `bootstrap.rsc`, never by OpenTofu, so it survives a broken VLAN config or a bad apply |
@@ -97,15 +97,15 @@ gets a DHCP lease without any VLAN config.
 Starting Cilium settings (final values live in
 `kubernetes/infrastructure/cilium/values.yaml`):
 
-- `kubeProxyReplacement: true`, Talos `cluster.proxy.disabled: true`,
-  `cluster.network.cni.name: none`
+- `kubeProxyReplacement: true`; on the Talos side kube-proxy and Flannel are
+  off (`talos/patches/common.yaml`)
 - `k8sServiceHost: localhost`, `k8sServicePort: 7445` (KubePrism)
 - `ipam.mode: kubernetes`
 - `routingMode: native`, `autoDirectNodeRoutes: true`,
   `ipv4NativeRoutingCIDR: 10.244.0.0/16` (all nodes share one L2 segment,
   so no VXLAN)
 - `bgpControlPlane.enabled: true`, `gatewayAPI.enabled: true`, Hubble relay + UI
-- Encryption off at first; WireGuard and Istio ambient are compared in
+- Encryption off at first, then WireGuard on, with the overhead measured in
   `experiments/`
 
 ## BGP
