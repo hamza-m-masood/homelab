@@ -35,7 +35,11 @@ the bottom cover).
 Label the boxes to match. Each box also has its MAC on a sticker next to the
 network port.
 
-## Planned upgrades (not bought yet)
+## Upgrades (deferred)
+
+Not bought yet, on cost. Router, Talos, Cilium and Argo CD fit in 8 GB per
+node. Revisit before the storage phase: on 8 GB, that phase most likely uses
+Longhorn on the boot disk rather than Rook-Ceph.
 
 | Per node | Why |
 |---|---|
