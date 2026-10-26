@@ -4,6 +4,7 @@
 |---|---|---|
 | 3x Lenovo ThinkCentre M910q Tiny (machine type 10MV) | Talos nodes, control plane + workloads | Details below |
 | MikroTik hAP ax2 (RouterOS 7) | Lab router, switch, Wi-Fi, BGP peer | 1x WAN + 4x LAN, 1 GbE |
+| Lenovo ThinkPad X390 (Linux) | Admin laptop (`task`, `tofu`, `talosctl`), and the external client for benchmarks | Wired into hAP ether5 through the ThinkPad Ethernet Extension Adapter |
 | Virgin Media gigabit hub | Home router, upstream of the hAP | Not managed by this repo |
 | Netgear FS116 | Not used | 10/100 Mbps unmanaged; too slow for any lab traffic |
 

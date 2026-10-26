@@ -6,6 +6,9 @@ from step 5.
 
 About 30 minutes the first time. Steps 1-4 happen once per laptop.
 
+The admin laptop is the ThinkPad X390 (Linux), wired in through its Ethernet
+dongle. Keep its Wi-Fi on the home network for internet.
+
 ## On the laptop
 
 **1. Tools.** Install [mise](https://mise.jdx.dev), then in the repo root:
@@ -82,8 +85,15 @@ tested on 7.25.
 Confirm with `y`. The router wipes itself, reboots and runs the script. That
 takes about two minutes, most of it generating certificates.
 
-**10. Move the laptop cable to ether5**, the rescue port. The laptop gets
-10.10.99.2-9 with no gateway, so keep home Wi-Fi on for internet.
+**10. Move the laptop cable to ether5**, the rescue port. This is the
+X390's permanent wired port. The laptop gets:
+
+- an address in 10.10.99.2-9
+- the router (10.10.99.1) as DNS
+- a route to the whole lab (10.10.0.0/16)
+
+It gets no default gateway, so internet stays on home Wi-Fi.
+`ip route get 10.10.10.1` should show `via 10.10.99.1`.
 
 Then delete the rendered script, which contains passwords:
 

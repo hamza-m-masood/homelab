@@ -52,6 +52,10 @@ with the pinned CA. Results:
 - a full apply from scratch succeeds, and a second plan shows no changes
 - the state file holds no plaintext
 - the firewall comes out in the intended order
+- with ether5 on a TAP device, a real DHCP client (busybox `udhcpc`) gets
+  DNS 10.10.99.1 and the 10.10.0.0/16 route, with no default gateway. Lab
+  names resolve and the router's mgmt, clients and WireGuard addresses
+  answer through that route
 
 Bugs this caught, now fixed:
 

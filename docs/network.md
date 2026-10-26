@@ -36,7 +36,7 @@ patches (`talos/`) implement what is written here; change this file first.
 | 20 | storage | 10.10.20.0/24 | none | node ports, tagged | Ceph cluster network or Longhorn replication. The hAP has no IP here, so nothing can route in or out. |
 | 30 | clients | 10.10.30.0/24 | 10.10.30.1 | lab Wi-Fi | Laptop, phone |
 | | wireguard | 10.10.40.0/24 | 10.10.40.1 | hAP `wg0` | Access from the home LAN and from outside |
-| | rescue | 10.10.99.0/24 | none handed out | hAP ether5, outside the bridge | Break-glass admin port. Set up by `bootstrap.rsc`, never by OpenTofu, so it survives a broken VLAN config or a bad apply |
+| | rescue | 10.10.99.0/24 | none; DHCP gives a route to 10.10.0.0/16 instead | hAP ether5, outside the bridge | The admin laptop's wired port, and the break-glass port. Set up by `bootstrap.rsc`, never by OpenTofu, so it survives a broken VLAN config or a bad apply |
 | | lb-pool | 10.10.100.0/24 | | no interface | Cilium LB-IPAM; routes learned by the hAP over BGP |
 | | pods | 10.244.0.0/16 | | | Per-node /24s, Cilium native routing |
 | | services | 10.96.0.0/12 | | | ClusterIPs |
@@ -61,7 +61,7 @@ Node N is `.1N` in every subnet.
 | 10.10.20.11-13 | node1-3 storage interfaces, static, no routes |
 | 10.10.30.100-254 | DHCP: clients |
 | 10.10.40.2+ | WireGuard peers, static per peer |
-| 10.10.99.2-9 | DHCP: rescue port |
+| 10.10.99.2-9 | DHCP: rescue port (the X390). DNS 10.10.99.1, route to 10.10.0.0/16 via 10.10.99.1 (option 121), no default gateway |
 | 10.10.100.10 | Main Cilium Gateway (all HTTP/gRPC) |
 | 10.10.100.20-254 | LB-IPAM pool for other LoadBalancer Services |
 
@@ -77,7 +77,7 @@ KubePrism on `localhost:7445`.
 | ether2 | bridge, PVID 10, tagged 20 | node1 |
 | ether3 | bridge, PVID 10, tagged 20 | node2 |
 | ether4 | bridge, PVID 10, tagged 20 | node3 |
-| ether5 | routed, not in bridge | rescue, 10.10.99.1/24 with DHCP (no gateway); configured by `bootstrap.rsc` |
+| ether5 | routed, not in bridge | admin laptop / rescue, 10.10.99.1/24 with DHCP; configured by `bootstrap.rsc` |
 | wifi (2.4 + 5 GHz) | bridge, PVID 30 | SSID `lab` |
 
 VLAN 10 is untagged on node ports so a wiped node in Talos maintenance mode
