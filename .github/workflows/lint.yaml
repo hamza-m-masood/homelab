@@ -36,6 +36,20 @@ jobs:
       - name: shellcheck
         run: shellcheck scripts/*.sh
 
+      - name: Install talosctl
+        run: |
+          source talos/talos.env
+          curl -fsSL -o talosctl "https://github.com/siderolabs/talos/releases/download/$TALOS_VERSION/talosctl-linux-amd64"
+          sudo install -m 755 talosctl /usr/local/bin/talosctl && rm talosctl
+
+      # Same as `task talos:validate`: render all three nodes with throwaway
+      # secrets and validate them in metal mode.
+      - name: Talos configs
+        run: |
+          out=$(mktemp -d)
+          talosctl gen secrets --output-file "$out/secrets.yaml"
+          scripts/talos-gen.sh "$out/secrets.yaml" "$out"
+
       - name: gitleaks
         uses: gitleaks/gitleaks-action@v2
         env:

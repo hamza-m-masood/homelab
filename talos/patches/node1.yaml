@@ -1,0 +1,23 @@
+# node1: hAP ether2. Addresses from docs/network.md (node N is .1N).
+apiVersion: v1alpha1
+kind: HostnameConfig
+auto:
+  $patch: delete
+hostname: node1
+---
+apiVersion: v1alpha1
+kind: LinkConfig
+name: lan
+addresses:
+  - address: 10.10.10.11/24
+routes:
+  - gateway: 10.10.10.1
+---
+# Storage VLAN: tagged on the same NIC, no routes (not routed by the hAP).
+apiVersion: v1alpha1
+kind: VLANConfig
+name: storage
+vlanID: 20
+parent: lan
+addresses:
+  - address: 10.10.20.11/24

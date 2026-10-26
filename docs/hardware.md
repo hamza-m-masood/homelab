@@ -33,26 +33,31 @@ the bottom cover).
 | node3 | ether4 | from the router's DHCP leases on first boot |
 
 Label the boxes to match. Each box also has its MAC on a sticker next to the
-network port.
+network port. The MACs are for Wake-on-LAN; the Talos config doesn't use
+them (it finds the NIC by driver).
 
-## Upgrades (deferred)
+## Upgrades
 
-Not bought yet, on cost. Router, Talos, Cilium and Argo CD fit in 8 GB per
-node. Revisit before the storage phase: on 8 GB, that phase most likely uses
-Longhorn on the boot disk rather than Rook-Ceph.
+RAM: one 16 GB DDR4 SODIMM (2Rx8) per node, next to one of the existing
+4 GB sticks, for 20 GB. That fits everything on the roadmap with Ceph's
+memory tuned down ([0007](adr/0007-rook-ceph.md)). Which stick is in which
+box gets recorded here once each has passed MemTest86+. Swap one node at a
+time; the cluster keeps quorum on the other two.
 
-| Per node | Why |
+Deferred, on cost:
+
+| What | Why |
 |---|---|
-| 2x 16 GB DDR4 SODIMM, non-ECC, 2133 MT/s or faster | 8 GB fits Talos, Cilium and Argo CD, not storage plus Elasticsearch plus Zeebe (roughly 10-14 GB per node) |
-| 1x M.2 2280 NVMe, 512 GB-1 TB, single-sided, in the SSD2 slot | Data disk for Ceph or Longhorn; Talos stays on the boot disk. 1 GbE caps replicated writes at ~110 MB/s, so NVMe vs SATA doesn't matter here |
+| Per node: 1x M.2 2280 NVMe, 512 GB-1 TB, single-sided, in the SSD2 slot | A dedicated Ceph disk. Ceph starts on the free space of the boot disks; this is for when that's too small or too slow. 1 GbE caps replicated writes at ~110 MB/s, so NVMe vs SATA doesn't matter here |
+| One GPU node: a used desktop with an NVIDIA card, 12 GB of VRAM or more | Real GPU scheduling and model serving ([0006](adr/0006-ai-infrastructure.md)), after the inference phase works on simulators. The M910q Tiny has no slot for a graphics card. Joins as a fourth Talos node, with NVIDIA's drivers as Talos system extensions. The hAP has no free port, so it also needs a VLAN-aware gigabit switch |
 
 The second slot may need an M.2 screw or clip; the first slot uses a blue
 plastic clip.
 
-The drive choice matters if Rook-Ceph is the storage pick:
+The drive choice matters for Ceph:
 
-- **Consumer NVMe:** fine for Longhorn. Slow under Ceph's synchronous writes,
-  because there is no power-loss protection.
+- **Consumer NVMe** (what the boot disks are): works, but slow under Ceph's
+  synchronous writes, because there is no power-loss protection.
 - **Used enterprise M.2 2280 with power-loss protection** (Kingston
   DC1000B/DC2000B, Micron 7400/7450 PRO): Ceph behaves like it does on
   servers. They run hotter.

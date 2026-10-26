@@ -1,0 +1,8 @@
+# Talos Image Factory schematic: which system extensions go into the image.
+# Its ID is a hash of the settings below (comments don't count).
+# `task talos:schematic` registers it and prints the ID, which goes into
+# talos/talos.env (TALOS_SCHEMATIC).
+customization:
+  systemExtensions:
+    officialExtensions:
+      - siderolabs/intel-ucode # CPU microcode for the i5-6500
