@@ -40,11 +40,16 @@ can't remove the way back in.
   are applied. The sessions only matter once Cilium runs BGP, by which point the
   provider may be fixed. If not, fixing it upstream is a small Go change.
 
+- **"Field '…' not found in the schema" warnings.** The same provider lag:
+  RouterOS 7.25 reports fields provider 1.99.1 doesn't know (for example
+  `mlag_init_delay` on the bridge). They are ignored and don't affect plans.
+  The `task` targets pass `-compact-warnings` so they take one line each.
+
 ## How this was tested
 
-On the real hAP ax2 (RouterOS 7.25, bootstrapped with Netinstall): full
-apply, and a phone on SSID `lab` gets a 10.10.30.x address, DNS and
-internet.
+On the real hAP ax2 (RouterOS 7.25, bootstrapped with Netinstall): a full
+apply, a second plan with no changes, and a phone on SSID `lab` that gets a
+10.10.30.x address, DNS and internet.
 
 Before that, against RouterOS CHR 7.25 (MikroTik's x86 build) in QEMU, with five NICs
 standing in for ether1-5: factory reset with `run-after-reset=bootstrap.rsc`,

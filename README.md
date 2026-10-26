@@ -23,7 +23,7 @@ Results get written up at [hamzamasood.dev](https://hamzamasood.dev).
 ## Roadmap
 
 - [ ] **0. Hardware inventory and BIOS**: [docs/hardware.md](docs/hardware.md). Inventory done; RAM and data SSD upgrades deferred on cost
-- [ ] **1. Router**: hAP ax2 as code (VLANs, DHCP, DNS, firewall, BGP, WireGuard, Wi-Fi). [Config](network/routeros/) applied to the real hAP and Wi-Fi verified; BGP sessions follow in phase 3
+- [x] **1. Router**: hAP ax2 as code (VLANs, DHCP, DNS, firewall, BGP, WireGuard, Wi-Fi). [Config](network/routeros/) applied to the real hAP: plan clean, Wi-Fi verified. BGP sessions follow in phase 3
 - [ ] **2. Talos**: three-node HA control plane, VIP, Image Factory schematic
 - [ ] **3. Cilium**: kube-proxy replacement, native routing, BGP to the hAP, Gateway API, Hubble
 - [ ] **4. GitOps**: Argo CD manages everything; `task rebuild` under 20 minutes
