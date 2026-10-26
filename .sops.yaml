@@ -2,4 +2,4 @@
 # placeholder with this machine's age public key.
 creation_rules:
   - path_regex: \.sops\.ya?ml$
-    age: age1PLACEHOLDER
+    age: age126ytkjp8lfzd7z5dmcy93txw9xqepelgkwe5dygapqpyev9raevst062nu
