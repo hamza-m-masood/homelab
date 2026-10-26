@@ -46,15 +46,17 @@ tasks:
     cmds:
       - sops exec-env {{.ROUTER_SECRETS}} 'tofu -chdir={{.ROUTER}} init'
 
+  # -compact-warnings: provider 1.99.1 warns about every RouterOS 7.25 field it
+  # doesn't know yet ("not found in the schema"). Harmless; one line each.
   router:plan:
     desc: Show what would change on the router
     cmds:
-      - sops exec-env {{.ROUTER_SECRETS}} 'tofu -chdir={{.ROUTER}} plan -out=router.tfplan'
+      - sops exec-env {{.ROUTER_SECRETS}} 'tofu -chdir={{.ROUTER}} plan -compact-warnings -out=router.tfplan'
 
   router:apply:
     desc: Apply the last plan
     cmds:
-      - sops exec-env {{.ROUTER_SECRETS}} 'tofu -chdir={{.ROUTER}} apply router.tfplan'
+      - sops exec-env {{.ROUTER_SECRETS}} 'tofu -chdir={{.ROUTER}} apply -compact-warnings router.tfplan'
 
   router:output:
     desc: Print outputs (e.g. the WireGuard public key)
