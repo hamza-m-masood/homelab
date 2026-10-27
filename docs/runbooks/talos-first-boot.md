@@ -63,7 +63,7 @@ the laptop's NVMe.
 ## Each node: node1, then node2, then node3
 
 **5. BIOS.** Monitor and keyboard on the node, power on, F1. Set what's in
-the [BIOS table](../hardware.md#bios-settings-f1-at-power-on); the AMT and
+the [BIOS table](../hardware.md#bios-settings-for-the-minis-f1-at-power-on); the AMT and
 BIOS update can wait. Save and power off.
 
 **6. Boot the stick.** Insert it, power on, F12, choose the USB stick. Talos

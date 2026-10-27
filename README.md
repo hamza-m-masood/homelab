@@ -1,6 +1,6 @@
 # homelab
 
-A three-node bare-metal Kubernetes lab, defined entirely in this repo and
+A bare-metal Kubernetes lab (three mini PCs and a GPU node), defined entirely in this repo and
 rebuildable from scratch in about 20 minutes. It exists to practise the
 layers below the ones I work with every day (bare metal, L2/L3 networking,
 eBPF, self-run distributed storage, GitOps) and the jobs AI platforms add on
@@ -13,14 +13,14 @@ Results get written up at [hamzamasood.dev](https://hamzamasood.dev).
 
 | Layer | Choice |
 |---|---|
-| Hardware | 3x Lenovo ThinkCentre M910q Tiny, MikroTik hAP ax2 ([hardware](docs/hardware.md)) |
+| Hardware | 3x Lenovo ThinkCentre M910q Tiny, a GPU node (Ryzen 7 7700, RTX 5070 12 GB), MikroTik hAP ax2 ([hardware](docs/hardware.md)) |
 | Router | RouterOS 7, configured with OpenTofu |
-| OS | Talos Linux, 3 control-plane nodes running workloads |
+| OS | Talos Linux: 3 control-plane nodes running workloads, plus the GPU node as a worker |
 | Network | VLANs on one NIC, Cilium (kube-proxy replacement, BGP, Gateway API, Hubble) ([network](docs/network.md)) |
 | GitOps | Argo CD |
 | Storage | Rook-Ceph: block volumes, and S3 for model weights and checkpoints |
-| Scheduling | Dynamic Resource Allocation (simulated GPUs for now), Kueue, JobSet |
-| Inference | Gateway API Inference Extension, simulated vLLM servers, llama.cpp |
+| Scheduling | Dynamic Resource Allocation (NVIDIA's driver, plus simulated GPUs for scale), Kueue, JobSet |
+| Inference | Gateway API Inference Extension, vLLM, simulated vLLM servers |
 | Secrets | SOPS + age |
 | DNS / TLS | `hamzatest.com` on Cloudflare, cert-manager, external-dns |
 
@@ -31,12 +31,12 @@ Results get written up at [hamzamasood.dev](https://hamzamasood.dev).
 - [ ] **2. Talos**: three-node HA control plane, VIP, Image Factory schematic. [Configs](talos/) written and validated in CI; install with the [first-boot runbook](docs/runbooks/talos-first-boot.md)
 - [ ] **3. Cilium**: kube-proxy replacement, native routing, BGP to the hAP, Gateway API, Hubble. WireGuard on, overhead measured once
 - [ ] **4. GitOps**: Argo CD manages everything; `task rebuild` under 20 minutes
-- [ ] **5. Storage**: Rook-Ceph. How fast model weights load from it, what node loss does to checkpoints and to a Zeebe cluster
-- [ ] **6. Scheduling**: Dynamic Resource Allocation with simulated GPUs; Kueue and JobSet for queues, quotas and all-or-nothing scheduling
-- [ ] **7. Inference**: Gateway API Inference Extension over simulated vLLM servers, llama.cpp for real tokens, autoscaling on queue depth. Cache-aware routing vs round robin, measured
-- [ ] **8. A Go controller** that caches model weights on nodes before pods scale up; cold starts measured
-- [ ] **9. Failure drills**: inject failures, compare an AI agent's diagnosis with mine
-- [ ] **Later: a GPU node** for real GPU scheduling and serving ([hardware](docs/hardware.md#upgrades))
+- [ ] **5. GPU node**: the old gaming PC joins as a Talos worker with NVIDIA's open kernel modules and container toolkit ([0008](docs/adr/0008-gpu-node.md)). Needs a VLAN switch
+- [ ] **6. Storage**: Rook-Ceph. How fast model weights load from it, what node loss does to checkpoints and to a Zeebe cluster
+- [ ] **7. Scheduling**: Dynamic Resource Allocation with NVIDIA's driver, plus simulated GPUs to schedule across more than one; Kueue and JobSet for queues, quotas and all-or-nothing scheduling
+- [ ] **8. Inference**: vLLM on the RTX 5070 and simulated vLLM servers behind the Gateway API Inference Extension, autoscaling on queue depth. Cache-aware routing vs round robin, measured
+- [ ] **9. A Go controller** that caches model weights on nodes before pods scale up; cold starts measured
+- [ ] **10. Failure drills**: inject failures, compare an AI agent's diagnosis with mine
 
 ## Layout
 
@@ -67,3 +67,4 @@ controllers/          Go controller(s)
 - [0005 Secrets with SOPS and age](docs/adr/0005-secrets-sops-age.md)
 - [0006 Aim the lab at AI infrastructure](docs/adr/0006-ai-infrastructure.md)
 - [0007 Rook-Ceph for storage](docs/adr/0007-rook-ceph.md)
+- [0008 The gaming PC becomes the GPU node](docs/adr/0008-gpu-node.md)

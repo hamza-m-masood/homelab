@@ -3,6 +3,7 @@
 | Device | Role | Notes |
 |---|---|---|
 | 3x Lenovo ThinkCentre M910q Tiny (machine type 10MV) | Talos nodes, control plane + workloads | Details below |
+| Former gaming PC (custom build) | Talos `node4`: GPU worker | Ryzen 7 7700, 32 GB, RTX 5070 12 GB. [Details below](#gpu-node) |
 | MikroTik hAP ax2 (RouterOS 7.25) | Lab router, switch, Wi-Fi, BGP peer | 1x WAN + 4x LAN, 1 GbE. Second-hand with an unknown password and a disabled reset button; reinstalled with Netinstall |
 | Lenovo ThinkPad X390 (Omarchy/Arch Linux, NetworkManager) | Admin laptop (`task`, `tofu`, `talosctl`), and the external client for benchmarks | Wired into hAP ether5 through a USB Ethernet adapter (`enp0s20f0u4`) |
 | Virgin Media gigabit hub | Home router, upstream of the hAP | Not managed by this repo |
@@ -36,6 +37,35 @@ Label the boxes to match. Each box also has its MAC on a sticker next to the
 network port. The MACs are for Wake-on-LAN; the Talos config doesn't use
 them (it finds the NIC by driver).
 
+## GPU node
+
+The old gaming PC, now lab-only ([0008](adr/0008-gpu-node.md)). Windows gets
+wiped by the Talos install; nothing on it is kept.
+
+| | |
+|---|---|
+| CPU | AMD Ryzen 7 7700 (8 cores, 16 threads), ARCTIC Freezer 36 |
+| RAM | 32 GB: 2x 16 GB Crucial Pro DDR5-6000 CL36 |
+| GPU | ASUS Prime RTX 5070, 12 GB GDDR7 (Blackwell) |
+| Disk | Kingston NV3 1 TB NVMe, PCIe 4.0 (`SNV3S/1000G`): the Talos install disk |
+| Board | GIGABYTE B650M GAMING WIFI6E: one M.2 slot, onboard 2.5 GbE (Realtek), Wi-Fi 6E (unused; Talos has no Wi-Fi support) |
+| Power | MSI MAG A650BN, 650 W, 80 Plus Bronze |
+| Case | FOIFKIN X01 micro-ATX |
+| Port | VLAN switch behind hAP ether4, next to node3 |
+
+BIOS (Del at power-on; F12 for the boot menu):
+
+| Setting | Value | Why |
+|---|---|---|
+| Boot mode | UEFI only, CSM off | Talos boots UEFI |
+| Secure Boot | Off (for now) | As on the minis |
+| ErP | Disabled | Otherwise Wake-on-LAN doesn't work |
+| Wake on LAN | Enabled | It's switched off between experiments |
+| AC back | Memory (last state) | Comes back after an outage only if it was on |
+
+The NIC driver and disk serial get read from Talos maintenance mode before
+its config is written (`talosctl get links` and `get disks`).
+
 ## Upgrades
 
 RAM: one 16 GB DDR4 SODIMM (2Rx8) per node, next to one of the existing
@@ -44,12 +74,17 @@ memory tuned down ([0007](adr/0007-rook-ceph.md)). Which stick is in which
 box gets recorded here once each has passed MemTest86+. Swap one node at a
 time; the cluster keeps quorum on the other two.
 
+Needed before the GPU node joins:
+
+| What | Why |
+|---|---|
+| A small gigabit switch with 802.1Q VLANs, e.g. TP-Link TL-SG108E (~€30) | A port for node4: all five hAP ports are taken. It sits behind ether4 and carries node3 and node4 |
+
 Deferred, on cost:
 
 | What | Why |
 |---|---|
-| Per node: 1x M.2 2280 NVMe, 512 GB-1 TB, single-sided, in the SSD2 slot | A dedicated Ceph disk. Ceph starts on the free space of the boot disks; this is for when that's too small or too slow. 1 GbE caps replicated writes at ~110 MB/s, so NVMe vs SATA doesn't matter here |
-| One GPU node: a used desktop with an NVIDIA card, 12 GB of VRAM or more | Real GPU scheduling and model serving ([0006](adr/0006-ai-infrastructure.md)), after the inference phase works on simulators. The M910q Tiny has no slot for a graphics card. Joins as a fourth Talos node, with NVIDIA's drivers as Talos system extensions. The hAP has no free port, so it also needs a VLAN-aware gigabit switch |
+| Per mini: 1x M.2 2280 NVMe, 512 GB-1 TB, single-sided, in the SSD2 slot | A dedicated Ceph disk. Ceph starts on the free space of the boot disks; this is for when that's too small or too slow. 1 GbE caps replicated writes at ~110 MB/s, so NVMe vs SATA doesn't matter here |
 
 The second slot may need an M.2 screw or clip; the first slot uses a blue
 plastic clip.
@@ -62,7 +97,7 @@ The drive choice matters for Ceph:
   DC1000B/DC2000B, Micron 7400/7450 PRO): Ceph behaves like it does on
   servers. They run hotter.
 
-## BIOS settings (F1 at power-on)
+## BIOS settings for the minis (F1 at power-on)
 
 | Setting | Value | Why |
 |---|---|---|
