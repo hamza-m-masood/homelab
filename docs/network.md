@@ -20,9 +20,13 @@ patches (`talos/`) implement what is written here; change this file first.
    +------+------------+------------+-----------+-------------+
           | ether2     | ether3     | ether4    | Wi-Fi "lab" -> vlan30
           |            |            |
-       node1        node2        node3        BGP AS 65001 (Cilium)
-   10.10.10.11  10.10.10.12  10.10.10.13      vlan10, untagged
-   10.10.20.11  10.10.20.12  10.10.20.13      vlan20, tagged, not routed
+          |            |     VLAN switch (802.1Q)
+          |            |          |            |
+       node1        node2       node3        node4 (GPU worker)
+   10.10.10.11  10.10.10.12  10.10.10.13  10.10.10.14   vlan10, untagged
+   10.10.20.11  10.10.20.12  10.10.20.13  10.10.20.14   vlan20, tagged, not routed
+
+   BGP AS 65001 (Cilium)
 
    kube API VIP 10.10.10.10 (Talos)
    LoadBalancer pool 10.10.100.0/24, advertised to the hAP over BGP
@@ -56,9 +60,9 @@ Node N is `.1N` in every subnet.
 |---|---|
 | 10.10.10.1 | hAP (gateway, DNS, BGP) |
 | 10.10.10.10 | Kubernetes API VIP (Talos `vip`) |
-| 10.10.10.11-13 | node1-3, static in Talos config |
+| 10.10.10.11-14 | node1-4, static in Talos config (node4 is the GPU worker) |
 | 10.10.10.100-199 | DHCP: Talos maintenance mode, new nodes |
-| 10.10.20.11-13 | node1-3 storage interfaces, static, no routes |
+| 10.10.20.11-14 | node1-4 storage interfaces, static, no routes |
 | 10.10.30.100-254 | DHCP: clients |
 | 10.10.40.2+ | WireGuard peers, static per peer |
 | 10.10.99.2-9 | DHCP: rescue port (the X390). DNS 10.10.99.1, route to 10.10.0.0/16 via 10.10.99.1 (option 121), no default gateway |
@@ -76,7 +80,7 @@ KubePrism on `localhost:7445`.
 | ether1 | WAN | DHCP client on the Virgin hub, masquerade |
 | ether2 | bridge, PVID 10, tagged 20 | node1 |
 | ether3 | bridge, PVID 10, tagged 20 | node2 |
-| ether4 | bridge, PVID 10, tagged 20 | node3 |
+| ether4 | bridge, PVID 10, tagged 20 | VLAN switch for node3 and node4; each switch port set up the same way |
 | ether5 | routed, not in bridge | admin laptop / rescue, 10.10.99.1/24 with DHCP; configured by `bootstrap.rsc` |
 | wifi (2.4 + 5 GHz) | bridge, PVID 30 | SSID `lab` |
 
@@ -152,7 +156,7 @@ which only works if the hub has a public IPv4 address (no CGNAT).
   `hubble.hamzatest.com`, `grafana.hamzatest.com`, ... -> `10.10.100.10`,
   published by external-dns.
 - Infrastructure names are static records on the hAP: `router`, `k8s`
-  (-> `10.10.10.10`) and `node1`-`node3`, all under `hamzatest.com`. Lab
+  (-> `10.10.10.10`) and `node1`-`node3` (`node4` once it joins), all under `hamzatest.com`. Lab
   clients resolve through the hAP, which forwards everything else to
   Cloudflare (1.1.1.1).
 - `k8s.hamzatest.com` goes into the API server cert SANs. The Talos endpoint

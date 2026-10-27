@@ -10,7 +10,8 @@ metal, networking, distributed storage, GitOps. On top of those they do
 three jobs of their own: share scarce accelerators between teams, serve
 models, and move model weights and checkpoints around.
 
-The nodes have no GPU, and the M910q Tiny has no slot for one.
+The minis have no GPU and no slot for one. The GPU node is my old gaming PC
+([0008](0008-gpu-node.md)).
 
 ## Decision
 
@@ -19,18 +20,18 @@ The nodes have no GPU, and the M910q Tiny has no slot for one.
   weights and checkpoints as well as a Zeebe cluster.
 - The Cilium WireGuard vs Istio ambient comparison is dropped. WireGuard is
   switched on with Cilium and its overhead measured once.
-- Two new phases, neither needing a GPU:
-  - **Scheduling:** Dynamic Resource Allocation with the upstream example
-    driver, which advertises simulated GPUs; Kueue and JobSet for queues,
-    quotas and all-or-nothing scheduling of multi-pod jobs.
-  - **Inference:** the Gateway API Inference Extension routing to
-    `llm-d-inference-sim` replicas (vLLM's API and metrics, no model),
-    llama.cpp with a small model for real tokens, autoscaling on queue depth.
+- Two new phases, each using the real GPU and simulators side by side:
+  - **Scheduling:** Dynamic Resource Allocation with NVIDIA's driver on the
+    GPU node, and the upstream example driver's simulated GPUs to schedule
+    across more GPUs than exist; Kueue and JobSet for queues, quotas and
+    all-or-nothing scheduling of multi-pod jobs.
+  - **Inference:** the Gateway API Inference Extension routing to vLLM on
+    the GPU node and to `llm-d-inference-sim` replicas (vLLM's API and
+    metrics, no model) for scale, autoscaling on queue depth.
 - The Go controller caches model weights on nodes ahead of scale-up.
 - Failure drills: inject failures and compare an AI agent's diagnosis with
   mine.
-- A GPU node waits until the inference phase works on simulators
-  ([hardware](../hardware.md#upgrades)).
+- The GPU node joins after Argo CD ([0008](0008-gpu-node.md)).
 
 ## Alternatives
 
@@ -40,16 +41,12 @@ The nodes have no GPU, and the M910q Tiny has no slot for one.
 - **Keep the general platform plan**: service mesh comparisons and Camunda
   workloads are useful, but they're not what AI infrastructure work centres
   on.
-- **Buy a GPU node now**: scheduling and routing can be learned without one,
-  so the money goes where it first makes a difference.
 
 ## Consequences
 
-- Hands-on covers the control layer: scheduling, routing, storage and
-  operations. The fast data path of AI clusters (RDMA, InfiniBand, NCCL,
-  multi-node training) isn't reachable on 1 GbE; that comes from reading or
+- Hands-on covers scheduling, routing, storage, operations and single-GPU
+  serving. Multi-GPU and multi-node work (NVLink, RDMA, InfiniBand, NCCL,
+  distributed training) isn't reachable here; that comes from reading or
   rented hardware.
 - Simulated GPUs and model servers test control logic, not performance.
   Write-ups say which results came from simulators.
-- A fourth node needs a port. All five on the hAP are used (WAN, three
-  nodes, rescue), so a GPU node also means a VLAN-aware gigabit switch.
