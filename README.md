@@ -5,7 +5,9 @@ rebuildable from scratch in about 20 minutes. It exists to practise the
 layers below the ones I work with every day (bare metal, L2/L3 networking,
 eBPF, self-run distributed storage, GitOps) and the jobs AI platforms add on
 top: scheduling scarce accelerators, serving models, and moving model
-weights around ([why](docs/adr/0006-ai-infrastructure.md)).
+weights around ([why](docs/adr/0006-ai-infrastructure.md)). Its real
+workload is document processing for a small car import business, built with
+Camunda's agentic orchestration ([0009](docs/adr/0009-real-workload.md)).
 
 Results get written up at [hamzamasood.dev](https://hamzamasood.dev).
 
@@ -21,6 +23,7 @@ Results get written up at [hamzamasood.dev](https://hamzamasood.dev).
 | Storage | Rook-Ceph: block volumes, and S3 for model weights and checkpoints |
 | Scheduling | Dynamic Resource Allocation (NVIDIA's driver, plus simulated GPUs for scale), Kueue, JobSet |
 | Inference | Gateway API Inference Extension, vLLM, simulated vLLM servers |
+| Workload | Camunda 8: agentic BPMN flows and document extraction for a car import business |
 | Secrets | SOPS + age |
 | DNS / TLS | `hamzatest.com` on Cloudflare, cert-manager, external-dns |
 
@@ -31,12 +34,13 @@ Results get written up at [hamzamasood.dev](https://hamzamasood.dev).
 - [ ] **2. Talos**: three-node HA control plane, VIP, Image Factory schematic. [Configs](talos/) written and validated in CI; install with the [first-boot runbook](docs/runbooks/talos-first-boot.md)
 - [ ] **3. Cilium**: kube-proxy replacement, native routing, BGP to the hAP, Gateway API, Hubble. WireGuard on, overhead measured once
 - [ ] **4. GitOps**: Argo CD manages everything; `task rebuild` under 20 minutes
-- [ ] **5. GPU node**: the old gaming PC joins as a Talos worker with NVIDIA's open kernel modules and container toolkit ([0008](docs/adr/0008-gpu-node.md)). Needs a VLAN switch
-- [ ] **6. Storage**: Rook-Ceph. How fast model weights load from it, what node loss does to checkpoints and to a Zeebe cluster
-- [ ] **7. Scheduling**: Dynamic Resource Allocation with NVIDIA's driver, plus simulated GPUs to schedule across more than one; Kueue and JobSet for queues, quotas and all-or-nothing scheduling
-- [ ] **8. Inference**: vLLM on the RTX 5070 and simulated vLLM servers behind the Gateway API Inference Extension, autoscaling on queue depth. Cache-aware routing vs round robin, measured
-- [ ] **9. A Go controller** that caches model weights on nodes before pods scale up; cold starts measured
-- [ ] **10. Failure drills**: inject failures, compare an AI agent's diagnosis with mine
+- [ ] **5. Storage**: Rook-Ceph. How fast model weights load from it, what node loss does to checkpoints and to a Zeebe cluster
+- [ ] **6. Camunda**: Camunda 8 through Argo CD, and the first document flow for the car import business, on a cloud model with test documents ([0009](docs/adr/0009-real-workload.md))
+- [ ] **7. GPU node**: the old gaming PC joins as a Talos worker with NVIDIA's open kernel modules and container toolkit ([0008](docs/adr/0008-gpu-node.md)). Needs a VLAN switch
+- [ ] **8. Scheduling**: Dynamic Resource Allocation with NVIDIA's driver, plus simulated GPUs to schedule across more than one; Kueue and JobSet for queues, quotas and all-or-nothing scheduling
+- [ ] **9. Inference**: vLLM on the RTX 5070 and simulated vLLM servers behind the Gateway API Inference Extension, autoscaling on queue depth. Cache-aware routing vs round robin, measured. The document flow moves onto it, so real customer documents never leave the house
+- [ ] **10. A Go controller** that caches model weights on nodes before pods scale up; cold starts measured
+- [ ] **11. Failure drills**: inject failures, compare an AI agent's diagnosis with mine. Scheduled around the live document flow
 
 ## Layout
 
@@ -53,7 +57,7 @@ kubernetes/
   bootstrap/          applied once: Argo CD + root Application
   argocd/             ApplicationSets; Argo CD manages itself from here
   infrastructure/     one directory per component (cilium, cert-manager, storage, ...)
-  workloads/          model servers and test workloads
+  workloads/          Camunda, model servers and test workloads
 experiments/          hypothesis, method, harness and raw results per experiment
 controllers/          Go controller(s)
 ```
@@ -68,3 +72,4 @@ controllers/          Go controller(s)
 - [0006 Aim the lab at AI infrastructure](docs/adr/0006-ai-infrastructure.md)
 - [0007 Rook-Ceph for storage](docs/adr/0007-rook-ceph.md)
 - [0008 The gaming PC becomes the GPU node](docs/adr/0008-gpu-node.md)
+- [0009 A real workload: document processing for a car import business](docs/adr/0009-real-workload.md)
