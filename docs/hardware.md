@@ -70,9 +70,22 @@ its config is written (`talosctl get links` and `get disks`).
 
 RAM: one 16 GB DDR4 SODIMM (2Rx8) per node, next to one of the existing
 4 GB sticks, for 20 GB. That fits everything on the roadmap with Ceph's
-memory tuned down ([0007](adr/0007-rook-ceph.md)). Which stick is in which
-box gets recorded here once each has passed MemTest86+. Swap one node at a
+memory tuned down ([0007](adr/0007-rook-ceph.md)). Swap one node at a
 time; the cluster keeps quorum on the other two.
+
+16 GB sticks for these boxes have to be **2Rx8**: a 16 GB 1Rx8 stick is
+built from 16 Gb chips, which this 6th-gen Intel memory controller doesn't
+support. Mixed sizes and ranks are fine, since each slot is its own channel.
+Everything runs at 2133, the CPU's maximum.
+
+| Node | Sticks | MemTest86+ |
+|---|---|---|
+| node1 | SK Hynix HMA82GS6MFR8N-TF 16 GB + Samsung M471A5143EB0-CPB 4 GB | Passed |
+| node2 | Samsung M471A2K43CB1-CRC 16 GB + a Samsung 4 GB | To run |
+| node3 | Samsung M471A2K43CB1-CRC 16 GB + a Samsung 4 GB | To run |
+
+A Kingston MSI24D4S7D8MB-16 (2Rx8) was faulty: neither node1 nor node2
+would start with it (memory error beeps, no picture). Returned to the seller.
 
 Needed before the GPU node joins:
 
