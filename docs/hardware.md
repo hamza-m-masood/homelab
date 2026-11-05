@@ -85,7 +85,7 @@ Everything runs at 2133, the CPU's maximum.
 | node3 | Samsung M471A2K43CB1-CRC 16 GB + a Samsung 4 GB | To run |
 
 A Kingston MSI24D4S7D8MB-16 (2Rx8) was faulty: neither node1 nor node2
-would start with it (memory error beeps, no picture). Returned to the seller.
+would start with it (memory error beeps, no picture), so it isn't used.
 
 Needed before the GPU node joins:
 
