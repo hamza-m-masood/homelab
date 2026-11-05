@@ -1,6 +1,7 @@
 # 0006: Aim the lab at AI infrastructure
 
-Status: accepted
+Status: accepted. The inference work is expanded into six phases in
+[0010](0010-inference-at-scale.md).
 
 ## Context
 

@@ -22,7 +22,7 @@ Results get written up at [hamzamasood.dev](https://hamzamasood.dev).
 | GitOps | Argo CD |
 | Storage | Rook-Ceph: block volumes, and S3 for model weights and checkpoints |
 | Scheduling | Dynamic Resource Allocation (NVIDIA's driver, plus simulated GPUs for scale), Kueue, JobSet |
-| Inference | Gateway API Inference Extension, vLLM, simulated vLLM servers |
+| Inference | Gateway API Inference Extension with my own routing plugin, vLLM, simulated vLLM servers, KEDA, Python load harness ([0010](docs/adr/0010-inference-at-scale.md)) |
 | Workload | Camunda 8: agentic BPMN flows and document extraction for a car import business |
 | Secrets | SOPS + age |
 | DNS / TLS | `hamzatest.com` on Cloudflare, cert-manager, external-dns |
@@ -34,13 +34,16 @@ Results get written up at [hamzamasood.dev](https://hamzamasood.dev).
 - [ ] **2. Talos**: three-node HA control plane, VIP, Image Factory schematic. [Configs](talos/) written and validated in CI; install with the [first-boot runbook](docs/runbooks/talos-first-boot.md)
 - [ ] **3. Cilium**: kube-proxy replacement, native routing, BGP to the hAP, Gateway API, Hubble. WireGuard on, overhead measured once
 - [ ] **4. GitOps**: Argo CD manages everything; `task rebuild` under 20 minutes
-- [ ] **5. Storage**: Rook-Ceph. How fast model weights load from it, what node loss does to checkpoints and to a Zeebe cluster
-- [ ] **6. Camunda**: Camunda 8 through Argo CD, and the first document flow for the car import business, on a cloud model with test documents ([0009](docs/adr/0009-real-workload.md))
-- [ ] **7. GPU node**: the old gaming PC joins as a Talos worker with NVIDIA's open kernel modules and container toolkit ([0008](docs/adr/0008-gpu-node.md)). Needs a VLAN switch
-- [ ] **8. Scheduling**: Dynamic Resource Allocation with NVIDIA's driver, plus simulated GPUs to schedule across more than one; Kueue and JobSet for queues, quotas and all-or-nothing scheduling
-- [ ] **9. Inference**: vLLM on the RTX 5070 and simulated vLLM servers behind the Gateway API Inference Extension, autoscaling on queue depth. Cache-aware routing vs round robin, measured. The document flow moves onto it, so real customer documents never leave the house
-- [ ] **10. A Go controller** that caches model weights on nodes before pods scale up; cold starts measured
-- [ ] **11. Failure drills**: inject failures, compare an AI agent's diagnosis with mine. Scheduled around the live document flow
+- [ ] **5. Inference routing on simulators**: simulated vLLM replicas behind the Gateway API Inference Extension, no GPU needed. Round robin vs least queue vs prefix-cache-aware vs a routing plugin of my own, under replayed bursty traffic ([0010](docs/adr/0010-inference-at-scale.md))
+- [ ] **6. Storage**: Rook-Ceph. How fast model weights load from it, what node loss does to checkpoints and to a Zeebe cluster
+- [ ] **7. Camunda**: Camunda 8 through Argo CD, and the first document flow for the car import business, on a cloud model with test documents ([0009](docs/adr/0009-real-workload.md))
+- [ ] **8. GPU node**: the old gaming PC joins as a Talos worker with NVIDIA's open kernel modules and container toolkit ([0008](docs/adr/0008-gpu-node.md)). Needs a VLAN switch
+- [ ] **9. Serving on the GPU**: vLLM on the RTX 5070, the routing comparison repeated on real hardware, prefix caching and structured output measured, batching tuned from metrics, a mixed pool of two accelerator types. The document flow moves onto it, so real customer documents never leave the house
+- [ ] **10. Autoscaling and cold starts**: scale on queue depth with KEDA, down to zero; a Go controller pre-caches model weights; time to serve a burst measured
+- [ ] **11. Model rollouts**: canary releases of a new model version with latency and evaluation gates, and automatic rollback
+- [ ] **12. Multi-zone routing**: two zones with latency between them, locality routing with failover, a zone-loss drill under load
+- [ ] **13. Scheduling**: Dynamic Resource Allocation with NVIDIA's driver, plus simulated GPUs to schedule across more than one; Kueue and JobSet for queues, quotas and all-or-nothing scheduling
+- [ ] **14. Failure drills**: inject failures, compare an AI agent's diagnosis with mine. Scheduled around the live document flow
 
 ## Layout
 
@@ -58,7 +61,7 @@ kubernetes/
   argocd/             ApplicationSets; Argo CD manages itself from here
   infrastructure/     one directory per component (cilium, cert-manager, storage, ...)
   workloads/          Camunda, model servers and test workloads
-experiments/          hypothesis, method, harness and raw results per experiment
+experiments/          hypothesis, method, Python harness and raw results per experiment
 controllers/          Go controller(s)
 ```
 
@@ -73,3 +76,4 @@ controllers/          Go controller(s)
 - [0007 Rook-Ceph for storage](docs/adr/0007-rook-ceph.md)
 - [0008 The gaming PC becomes the GPU node](docs/adr/0008-gpu-node.md)
 - [0009 A real workload: document processing for a car import business](docs/adr/0009-real-workload.md)
+- [0010 Inference work aimed at serving at scale](docs/adr/0010-inference-at-scale.md)
