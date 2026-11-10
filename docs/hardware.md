@@ -81,7 +81,7 @@ Everything runs at 2133, the CPU's maximum.
 | Node | Sticks | MemTest86+ |
 |---|---|---|
 | node1 | SK Hynix HMA82GS6MFR8N-TF 16 GB + Samsung M471A5143EB0-CPB 4 GB | Passed |
-| node2 | Samsung M471A2K43CB1-CRC 16 GB + a Samsung 4 GB | To run |
+| node2 | Samsung M471A2K43CB1-CRC 16 GB + Samsung M471A5143DB0-CPB 4 GB | Passed |
 | node3 | Samsung M471A2K43CB1-CRC 16 GB + a Samsung 4 GB | To run |
 
 A Kingston MSI24D4S7D8MB-16 (2Rx8) was faulty: neither node1 nor node2
