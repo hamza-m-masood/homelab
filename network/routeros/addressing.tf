@@ -58,11 +58,11 @@ resource "routeros_ip_dhcp_server_network" "clients" {
 }
 
 resource "routeros_ip_dhcp_server_lease" "mac_model_server" {
-  count = local.mac_model_server.hw_address == "" ? 0 : 1
+  for_each = toset(compact([local.mac_model_server.hw_address]))
 
   server      = routeros_ip_dhcp_server.clients.name
   address     = local.mac_model_server.ip
-  mac_address = local.mac_model_server.hw_address
+  mac_address = each.value
   comment     = "MacBook model server"
 }
 
