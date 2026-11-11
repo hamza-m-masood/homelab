@@ -42,11 +42,11 @@ locals {
   # The MacBook as an on-demand model server for the document flow, outside
   # the cluster. Reserved on clients, below the DHCP pool. hw_address is the
   # Mac's Wi-Fi address with "Private Wi-Fi address" set to Fixed; the lease
-  # is only created once it's set.
+  # is only created once it's set (empty for now).
   mac_model_server = {
     ip         = "10.10.30.20"
     port       = "11434" # Ollama
-    hw_address = null
+    hw_address = ""
   }
 
   # wifi1 and wifi2 are the two radios; both broadcast the same SSID.

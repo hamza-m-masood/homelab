@@ -58,7 +58,7 @@ resource "routeros_ip_dhcp_server_network" "clients" {
 }
 
 resource "routeros_ip_dhcp_server_lease" "mac_model_server" {
-  count = local.mac_model_server.hw_address == null ? 0 : 1
+  count = local.mac_model_server.hw_address == "" ? 0 : 1
 
   server      = routeros_ip_dhcp_server.clients.name
   address     = local.mac_model_server.ip
