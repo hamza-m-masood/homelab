@@ -39,7 +39,7 @@ Results get written up at [hamzamasood.dev](https://hamzamasood.dev).
 - [ ] **7. Camunda**: Camunda 8 through Argo CD, and the first document flow for the car import business, on a cloud model with test documents ([0009](docs/adr/0009-real-workload.md))
 - [ ] **8. GPU node**: the old gaming PC joins as a Talos worker with NVIDIA's open kernel modules and container toolkit ([0008](docs/adr/0008-gpu-node.md)). Needs a VLAN switch
 - [ ] **9. Serving on the GPU**: vLLM on the RTX 5070, the routing comparison repeated on real hardware, prefix caching and structured output measured, batching tuned from metrics, a mixed pool of two accelerator types. The document flow moves onto it, so real customer documents never leave the house
-- [ ] **10. Autoscaling and cold starts**: scale on queue depth with KEDA, down to zero; a Go controller pre-caches model weights; time to serve a burst measured
+- [ ] **10. Autoscaling and cold starts**: scale on queue depth with KEDA, down to zero; a Go controller pre-caches model weights; time to serve a burst measured. The GPU node itself powers on with Wake-on-LAN when work arrives and shuts down when idle ([0011](docs/adr/0011-gpu-node-on-demand.md))
 - [ ] **11. Model rollouts**: canary releases of a new model version with latency and evaluation gates, and automatic rollback
 - [ ] **12. Multi-zone routing**: two zones with latency between them, locality routing with failover, a zone-loss drill under load
 - [ ] **13. Scheduling**: Dynamic Resource Allocation with NVIDIA's driver, plus simulated GPUs to schedule across more than one; Kueue and JobSet for queues, quotas and all-or-nothing scheduling
@@ -77,3 +77,4 @@ controllers/          Go controller(s)
 - [0008 The gaming PC becomes the GPU node](docs/adr/0008-gpu-node.md)
 - [0009 A real workload: document processing for a car import business](docs/adr/0009-real-workload.md)
 - [0010 Inference work aimed at serving at scale](docs/adr/0010-inference-at-scale.md)
+- [0011 The GPU node is powered on demand](docs/adr/0011-gpu-node-on-demand.md)
