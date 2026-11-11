@@ -39,6 +39,16 @@ locals {
     node3 = { port = "ether4", ip = "10.10.10.13" }
   }
 
+  # The MacBook as an on-demand model server for the document flow, outside
+  # the cluster. Reserved on clients, below the DHCP pool. hw_address is the
+  # Mac's Wi-Fi address with "Private Wi-Fi address" set to Fixed; the lease
+  # is only created once it's set.
+  mac_model_server = {
+    ip         = "10.10.30.20"
+    port       = "11434" # Ollama
+    hw_address = null
+  }
+
   # wifi1 and wifi2 are the two radios; both broadcast the same SSID.
   radios = toset(["wifi1", "wifi2"])
 

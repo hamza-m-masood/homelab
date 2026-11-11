@@ -36,6 +36,8 @@ locals {
     { name = "fwd-admin-kube-talos", chain = "forward", action = "accept", in_interface_list = local.fw_admin, out_interface_list = local.fw_mgmt, protocol = "tcp", dst_port = "6443,50000" },
     { name = "fwd-admin-mgmt-icmp", chain = "forward", action = "accept", in_interface_list = local.fw_admin, out_interface_list = local.fw_mgmt, protocol = "icmp" },
     { name = "fwd-admin-lb-pool", chain = "forward", action = "accept", in_interface_list = local.fw_admin, dst_address = local.lb_pool },
+    # Pod traffic leaves masqueraded to the node IPs (Cilium native routing).
+    { name = "fwd-nodes-mac-models", chain = "forward", action = "accept", src_address = local.node_ips, dst_address = local.mac_model_server.ip, protocol = "tcp", dst_port = local.mac_model_server.port },
     { name = "fwd-mgmt-internet", chain = "forward", action = "accept", in_interface_list = local.fw_mgmt, out_interface_list = local.fw_wan },
     { name = "fwd-admin-internet", chain = "forward", action = "accept", in_interface_list = local.fw_admin, out_interface_list = local.fw_wan },
   ]

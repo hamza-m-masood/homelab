@@ -59,7 +59,9 @@ scale-to-zero work in [0010](0010-inference-at-scale.md) phase 3.
   could serve models from macOS (Ollama, MLX) outside the cluster. A Mac
   can't be woken from shutdown, only from sleep (`pmset` schedules or
   "Wake for network access" on power), and a laptop leaves the house. It's
-  fine for development, not for the lab's GPU.
+  fine for development, not for the lab's GPU. It does serve models
+  manually: woken by hand, it gets a reserved address and the nodes can
+  reach Ollama on it ([network](../network.md#firewall-intent)).
 
 ## Consequences
 

@@ -63,6 +63,7 @@ Node N is `.1N` in every subnet.
 | 10.10.10.11-14 | node1-4, static in Talos config (node4 is the GPU worker) |
 | 10.10.10.100-199 | DHCP: Talos maintenance mode, new nodes |
 | 10.10.20.11-14 | node1-4 storage interfaces, static, no routes |
+| 10.10.30.20 | MacBook model server (Ollama), reserved by MAC |
 | 10.10.30.100-254 | DHCP: clients |
 | 10.10.40.2+ | WireGuard peers, static per peer |
 | 10.10.99.2-9 | DHCP: rescue port (the X390). DNS 10.10.99.1, route to 10.10.0.0/16 via 10.10.99.1 (option 121), no default gateway |
@@ -141,6 +142,7 @@ To verify while building:
 | admin | internet | everything |
 | mgmt | hAP | DNS, DHCP, TCP 179 (BGP) from the node IPs |
 | mgmt | internet | everything (images, Cloudflare API, NTP) |
+| node1-3 | MacBook (10.10.30.20) | TCP 11434 (Ollama), for the document flow when the Mac serves models |
 | home LAN / internet | hAP WAN | UDP WireGuard only |
 | anything else | anything | dropped |
 
@@ -156,7 +158,7 @@ which only works if the hub has a public IPv4 address (no CGNAT).
   `hubble.hamzatest.com`, `grafana.hamzatest.com`, ... -> `10.10.100.10`,
   published by external-dns.
 - Infrastructure names are static records on the hAP: `router`, `k8s`
-  (-> `10.10.10.10`) and `node1`-`node3` (`node4` once it joins), all under `hamzatest.com`. Lab
+  (-> `10.10.10.10`), `mac` (-> `10.10.30.20`) and `node1`-`node3` (`node4` once it joins), all under `hamzatest.com`. Lab
   clients resolve through the hAP, which forwards everything else to
   Cloudflare (1.1.1.1).
 - `k8s.hamzatest.com` goes into the API server cert SANs. The Talos endpoint

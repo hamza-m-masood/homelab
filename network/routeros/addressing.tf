@@ -57,6 +57,15 @@ resource "routeros_ip_dhcp_server_network" "clients" {
   dns_server = [local.clients.gateway]
 }
 
+resource "routeros_ip_dhcp_server_lease" "mac_model_server" {
+  count = local.mac_model_server.hw_address == null ? 0 : 1
+
+  server      = routeros_ip_dhcp_server.clients.name
+  address     = local.mac_model_server.ip
+  mac_address = local.mac_model_server.hw_address
+  comment     = "MacBook model server"
+}
+
 # The router resolves for the lab. App names (argocd., grafana., ...) are
 # public records managed by external-dns; infrastructure names live here.
 
@@ -67,7 +76,7 @@ resource "routeros_ip_dns" "dns" {
 
 resource "routeros_ip_dns_record" "infra" {
   for_each = merge(
-    { router = local.mgmt.gateway, k8s = local.kube_vip },
+    { router = local.mgmt.gateway, k8s = local.kube_vip, mac = local.mac_model_server.ip },
     { for name, node in local.nodes : name => node.ip },
   )
 
